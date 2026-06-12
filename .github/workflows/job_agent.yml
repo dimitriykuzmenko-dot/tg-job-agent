@@ -45,3 +45,4 @@ jobs:
           git add state.json
           git diff --cached --quiet || git commit -m "update state [skip ci]"
           git push
+
