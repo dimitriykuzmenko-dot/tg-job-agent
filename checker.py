@@ -236,7 +236,35 @@ HH_API = "https://api.hh.ru/vacancies"
 HH_HEADERS = {"User-Agent": "tg-job-agent/1.0 (personal job monitor)"}
 
 
-def fetch_hh_vacancies(search: dict):
+def get_hh_auth_header():
+    """Заголовок авторизации для hh: либо готовый HH_API_TOKEN,
+    либо получаем токен приложения по HH_CLIENT_ID/HH_CLIENT_SECRET."""
+    token = os.environ.get("HH_API_TOKEN", "").strip()
+    if token:
+        return {"Authorization": f"Bearer {token}"}
+    cid = os.environ.get("HH_CLIENT_ID", "").strip()
+    csec = os.environ.get("HH_CLIENT_SECRET", "").strip()
+    if not (cid and csec):
+        return {}
+    try:
+        r = requests.post(
+            "https://api.hh.ru/token",
+            data={
+                "grant_type": "client_credentials",
+                "client_id": cid,
+                "client_secret": csec,
+            },
+            headers=HH_HEADERS,
+            timeout=30,
+        )
+        r.raise_for_status()
+        return {"Authorization": f"Bearer {r.json()['access_token']}"}
+    except requests.RequestException as e:
+        print(f"[warn] не удалось получить токен hh: {e}")
+        return {}
+
+
+def fetch_hh_vacancies(search: dict, auth_header: dict):
     """Один поисковый запрос к hh.ru. Возвращает список вакансий или None."""
     params = {
         "text": search["text"],
@@ -249,16 +277,18 @@ def fetch_hh_vacancies(search: dict):
         params["area"] = search["area"]
     if search.get("schedule"):
         params["schedule"] = search["schedule"]
-    token = os.environ.get("HH_API_TOKEN", "").strip()
     headers = dict(HH_HEADERS)
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
+    headers.update(auth_header)
     try:
         r = requests.get(HH_API, params=params, headers=headers, timeout=30)
         if r.status_code == 403:
-            print("[error] hh.ru вернул 403 — анонимный доступ ограничен. "
-                  "Зарегистрируй приложение на dev.hh.ru и добавь секрет "
-                  "HH_API_TOKEN в репозиторий.")
+            hint = ("есть токен, но hh всё равно отказал — вероятно, "
+                    "блокировка по IP для зарубежных серверов"
+                    if auth_header else
+                    "анонимный доступ ограничен — зарегистрируй приложение "
+                    "на dev.hh.ru и добавь секреты HH_CLIENT_ID и "
+                    "HH_CLIENT_SECRET")
+            print(f"[error] hh.ru вернул 403 ({hint})")
             return None
         r.raise_for_status()
         return r.json().get("items", [])
@@ -292,9 +322,10 @@ def process_hh(config, state, exclude_keywords, token, chat_id, first_run):
 
     seen = set(state.setdefault("seen_hh", []))
     matched_total, sent_total = 0, 0
+    auth_header = get_hh_auth_header()
 
     for search in hh_cfg.get("searches", []):
-        items = fetch_hh_vacancies(search)
+        items = fetch_hh_vacancies(search, auth_header)
         if items is None:
             continue
         for v in items:
