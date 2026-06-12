@@ -74,7 +74,7 @@
     ]
   },
   "hh": {
-    "enabled": true,
+    "enabled": false,
     "searches": [
       {"text": "операционный директор OR COO", "area": "113"},
       {"text": "исполнительный директор", "area": "113"},
