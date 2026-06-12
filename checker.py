@@ -129,6 +129,118 @@ def send_telegram_message(token: str, chat_id: str, text: str) -> bool:
         return False
 
 
+# ---------------------------------------------------------------- hh.ru ----
+
+HH_API = "https://api.hh.ru/vacancies"
+HH_HEADERS = {"User-Agent": "tg-job-agent/1.0 (personal job monitor)"}
+
+
+def fetch_hh_vacancies(search: dict):
+    """Один поисковый запрос к hh.ru. Возвращает список вакансий или None."""
+    params = {
+        "text": search["text"],
+        "search_field": "name",       # ищем только в названии вакансии
+        "period": 2,                  # за последние 2 дня (дедупом отсеем)
+        "per_page": 50,
+        "order_by": "publication_time",
+    }
+    if search.get("area"):
+        params["area"] = search["area"]
+    if search.get("schedule"):
+        params["schedule"] = search["schedule"]
+    token = os.environ.get("HH_API_TOKEN", "").strip()
+    headers = dict(HH_HEADERS)
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    try:
+        r = requests.get(HH_API, params=params, headers=headers, timeout=30)
+        if r.status_code == 403:
+            print("[error] hh.ru вернул 403 — анонимный доступ ограничен. "
+                  "Зарегистрируй приложение на dev.hh.ru и добавь секрет "
+                  "HH_API_TOKEN в репозиторий.")
+            return None
+        r.raise_for_status()
+        return r.json().get("items", [])
+    except requests.RequestException as e:
+        print(f"[error] hh.ru ({search['text'][:40]}): {e}")
+        return None
+
+
+def format_hh_salary(salary) -> str:
+    if not salary:
+        return ""
+    cur = {"RUR": "₽", "USD": "$", "EUR": "€"}.get(
+        salary.get("currency"), salary.get("currency") or ""
+    )
+    lo, hi = salary.get("from"), salary.get("to")
+    if lo and hi:
+        s = f"{lo:,}–{hi:,} {cur}"
+    elif lo:
+        s = f"от {lo:,} {cur}"
+    elif hi:
+        s = f"до {hi:,} {cur}"
+    else:
+        return ""
+    return "💰 " + s.replace(",", " ")
+
+
+def process_hh(config, state, exclude_keywords, token, chat_id, first_run):
+    hh_cfg = config.get("hh") or {}
+    if not hh_cfg.get("enabled"):
+        return 0, 0
+
+    seen = set(state.setdefault("seen_hh", []))
+    matched_total, sent_total = 0, 0
+
+    for search in hh_cfg.get("searches", []):
+        items = fetch_hh_vacancies(search)
+        if items is None:
+            continue
+        for v in items:
+            vid = str(v.get("id"))
+            if vid in seen:
+                continue
+            seen.add(vid)
+            if first_run:
+                continue
+
+            name = v.get("name", "")
+            low = name.lower()
+            if any(_keyword_hit(ex, low) for ex in exclude_keywords):
+                continue
+
+            salary_min = hh_cfg.get("salary_from")
+            if salary_min:
+                s = v.get("salary") or {}
+                top = s.get("to") or s.get("from")
+                if top and top < salary_min:
+                    continue
+                if not top and hh_cfg.get("only_with_salary"):
+                    continue
+
+            employer = (v.get("employer") or {}).get("name", "")
+            area = (v.get("area") or {}).get("name", "")
+            sched = (v.get("schedule") or {}).get("name", "")
+            salary_line = format_hh_salary(v.get("salary"))
+
+            lines = [f"🟥 hh.ru: {name}", f"🏢 {employer}"]
+            loc = " · ".join(x for x in [area, sched] if x)
+            if loc:
+                lines.append(f"📍 {loc}")
+            if salary_line:
+                lines.append(salary_line)
+            lines.append(f"\n👉 {v.get('alternate_url', '')}")
+
+            matched_total += 1
+            if send_telegram_message(token, chat_id, "\n".join(lines)):
+                sent_total += 1
+            time.sleep(1.5)
+        time.sleep(0.5)  # пауза между поисковыми запросами
+
+    state["seen_hh"] = sorted(seen)[-2000:]
+    return matched_total, sent_total
+
+
 def main():
     token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
     chat_id = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
@@ -197,15 +309,25 @@ def main():
         time.sleep(1)  # пауза между каналами, чтобы не злить t.me
 
     state["first_run_done"] = True
+
+    # ------------------------------------------------------------ hh.ru ----
+    hh_first_run = not state.get("hh_first_run_done", False)
+    hh_matched, hh_sent = process_hh(
+        config, state, config.get("exclude_keywords", []),
+        token, chat_id, hh_first_run,
+    )
+    state["hh_first_run_done"] = True
+
     STATE_PATH.write_text(
         json.dumps(state, ensure_ascii=False, indent=1), encoding="utf-8"
     )
 
-    print(f"Готово: новых постов {total_new}, "
+    print(f"Telegram-каналы: новых постов {total_new}, "
           f"совпадений {total_matched}, отправлено {total_sent}")
-    if first_run:
-        print("Первый запуск: посты проиндексированы, уведомления "
-              "начнутся со следующего запуска.")
+    print(f"hh.ru: совпадений {hh_matched}, отправлено {hh_sent}")
+    if first_run or hh_first_run:
+        print("Первый запуск источника: проиндексировано без уведомлений, "
+              "рассылка начнётся со следующего запуска.")
 
 
 if __name__ == "__main__":
