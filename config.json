@@ -14,7 +14,15 @@
     "alenavladimirskaya",
     "finexecutive",
     "vdhl_good",
-    "goodpeople_pro"
+    "goodpeople_pro",
+    "job4top1",
+    "top_proit",
+    "EkleftJob",
+    "TOP_job_in_production",
+    "careerfedoroff",
+    "rusukrjobs",
+    "zarubezhom_jobs",
+    "job_for_relocation"
   ],
   "keywords": [
     "coo",
@@ -33,7 +41,12 @@
     "управляющий директор",
     "директор по операц",
     "head of operations",
-    "managing director"
+    "managing director",
+    "chief operating officer",
+    "chief marketing officer",
+    "chief executive officer",
+    "general manager",
+    "country manager"
   ],
   "exclude_keywords": [
     "стажировка",
@@ -45,11 +58,14 @@
   "max_post_age_hours": 48,
   "ai_filter": {
     "enabled": true,
-    "profile": "Кандидат: топ-менеджер (C-level) с 20+ годами опыта в операционном управлении и маркетинге (Hospitality, FMCG, Digital, SaaS, E-commerce, консалтинг). Был CEO, COO, заместителем гендиректора. Ищет позиции: COO / операционный директор, исполнительный директор, генеральный директор / CEO, CMO / директор по маркетингу, коммерческий директор. География: Россия, рассматривает удалёнку. РЕЛЕВАНТНО: вакансии уровня первого лица или его прямого зама, полная ответственность за операционку/маркетинг/P&L. НЕ релевантно: руководители отделов и групп, мидл-менеджмент, линейные роли, ассистенты, стажировки, фриланс-проекты, вакансии в других странах без удалёнки.",
+    "min_score": 65,
+    "profile": "Кандидат: топ-менеджер (C-level) с 20+ годами опыта в операционном управлении и маркетинге (Hospitality, FMCG, Digital, SaaS, E-commerce, консалтинг). Был CEO, COO, заместителем гендиректора. Русский родной, рабочий английский. Ищет позиции: COO / операционный директор / Chief Operating Officer, исполнительный директор, генеральный директор / CEO / General Manager / Country Manager, CMO / директор по маркетингу, коммерческий директор / Managing Director. География: Россия, удалёнка, а также зарубежные позиции с релокацией или в русскоязычных/международных компаниях. РЕЛЕВАНТНО: вакансии уровня первого лица или его прямого зама, полная ответственность за операционку/маркетинг/P&L, в том числе за рубежом. НЕ релевантно: руководители отделов и групп, мидл-менеджмент, линейные роли, ассистенты, стажировки, фриланс-проекты.",
     "prefilter_keywords": [
       "директор", "руководител", "ceo", "coo", "cmo", "chief",
       "head of", "управляющ", "executive", "топ-менедж",
-      "правая рука", "операцион", "генеральн"
+      "правая рука", "операцион", "генеральн",
+      "general manager", "country manager", "managing director",
+      "operations", "relocation", "релокац"
     ]
   },
   "hh": {
