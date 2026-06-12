@@ -2,11 +2,12 @@ name: Job Agent
 
 on:
   schedule:
+    # Каждые 30 минут. GitHub может задерживать запуск на 5-15 минут — это нормально.
     - cron: "*/30 * * * *"
-  workflow_dispatch: {}
+  workflow_dispatch: {}  # кнопка ручного запуска во вкладке Actions
 
 permissions:
-  contents: write
+  contents: write  # нужно, чтобы коммитить state.json обратно
 
 concurrency:
   group: job-agent
@@ -31,6 +32,10 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          HH_API_TOKEN: ${{ secrets.HH_API_TOKEN }}
+          HH_CLIENT_ID: ${{ secrets.HH_CLIENT_ID }}
+          HH_CLIENT_SECRET: ${{ secrets.HH_CLIENT_SECRET }}
         run: python checker.py
 
       - name: Commit state
