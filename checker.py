@@ -129,6 +129,96 @@ def send_telegram_message(token: str, chat_id: str, text: str) -> bool:
         return False
 
 
+# ---------------------------------------------------- дедуп и AI-фильтр ----
+
+import hashlib
+
+ANTHROPIC_API = "https://api.anthropic.com/v1/messages"
+ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"
+
+_URL_RE = re.compile(r"https?://\S+|t\.me/\S+|@\w+")
+_NONWORD_RE = re.compile(r"[^\wа-яё]+", re.IGNORECASE)
+
+
+def fingerprint(text: str) -> str:
+    """Отпечаток текста поста: одинаковые вакансии из разных каналов
+    дают одинаковый отпечаток, даже если различаются ссылками/эмодзи."""
+    t = _URL_RE.sub(" ", text.lower())
+    t = _NONWORD_RE.sub("", t)
+    return hashlib.md5(t[:600].encode("utf-8")).hexdigest()
+
+
+def ai_verdict(profile: str, post_text: str):
+    """Спрашивает у Claude Haiku, релевантна ли вакансия профилю.
+    Возвращает (True/False, причина) или None при ошибке/отсутствии ключа."""
+    api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+    if not api_key:
+        return None
+    prompt = (
+        f"{profile}\n\n"
+        "Ниже пост из телеграм-канала с вакансиями. Реши, релевантна ли "
+        "вакансия этому кандидату. Если пост вообще не вакансия (реклама, "
+        "статья, дайджест без конкретной позиции) — это НЕ релевантно.\n"
+        "Ответь строго одной строкой JSON без пояснений: "
+        '{"relevant": true|false, "reason": "очень кратко, до 10 слов"}\n\n'
+        f"ПОСТ:\n{post_text[:2000]}"
+    )
+    try:
+        r = requests.post(
+            ANTHROPIC_API,
+            headers={
+                "x-api-key": api_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json={
+                "model": ANTHROPIC_MODEL,
+                "max_tokens": 100,
+                "messages": [{"role": "user", "content": prompt}],
+            },
+            timeout=45,
+        )
+        r.raise_for_status()
+        raw = r.json()["content"][0]["text"].strip()
+        raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        data = json.loads(raw)
+        return bool(data.get("relevant")), str(data.get("reason", ""))[:120]
+    except Exception as e:
+        print(f"[warn] AI-фильтр недоступен ({e}), переключаюсь на ключевые слова")
+        return None
+
+
+def is_relevant(post_text: str, config) -> tuple:
+    """Решает, релевантен ли пост. Возвращает (bool, описание_причины).
+
+    Логика: AI-фильтр (если включён и есть ключ) после широкого префильтра;
+    при недоступности AI — откат на строгий список keywords."""
+    ai_cfg = config.get("ai_filter") or {}
+    keywords = config.get("keywords", [])
+    exclude = config.get("exclude_keywords", [])
+
+    low = post_text.lower()
+    if any(_keyword_hit(ex, low) for ex in exclude):
+        return False, "стоп-слово"
+
+    if ai_cfg.get("enabled"):
+        pre = ai_cfg.get("prefilter_keywords", [])
+        if pre and not any(_keyword_hit(p, low) for p in pre):
+            return False, "не прошёл префильтр"
+        verdict = ai_verdict(ai_cfg.get("profile", ""), post_text)
+        if verdict is not None:
+            ok, reason = verdict
+            return ok, f"AI: {reason}" if reason else "AI"
+        # AI недоступен — откат на ключевые слова
+
+    matched = [kw for kw in keywords if _keyword_hit(kw, low)]
+    if matched:
+        return True, "слова: " + ", ".join(matched[:4])
+    return False, "нет совпадений"
+
+
+
+
 # ---------------------------------------------------------------- hh.ru ----
 
 HH_API = "https://api.hh.ru/vacancies"
@@ -256,6 +346,7 @@ def main():
 
     state = load_json(STATE_PATH, {"seen": {}, "first_run_done": False})
     seen = state.setdefault("seen", {})
+    sent_fps = state.setdefault("sent_fingerprints", [])
     first_run = not state.get("first_run_done", False)
 
     max_age = timedelta(hours=config.get("max_post_age_hours", 48))
@@ -284,24 +375,31 @@ def main():
             if post["datetime"] and now - post["datetime"] > max_age:
                 continue
 
-            matched = match_keywords(
-                post["text"],
-                config.get("keywords", []),
-                config.get("exclude_keywords", []),
-            )
-            if not matched:
+            if not post["text"].strip():
+                continue
+
+            # Дедупликация: одна вакансия часто публикуется в нескольких
+            # каналах — шлём только первую встреченную копию.
+            fp = fingerprint(post["text"])
+            if fp in sent_fps:
+                print(f"[dup] {channel}/{post['id']}: уже присылал из другого канала")
+                continue
+
+            relevant, why = is_relevant(post["text"], config)
+            if not relevant:
                 continue
 
             total_matched += 1
             preview = post["text"][:700]
             msg = (
                 f"💼 Вакансия в @{channel}\n"
-                f"🔑 Совпало: {', '.join(matched)}\n\n"
+                f"🔎 {why}\n\n"
                 f"{preview}{'…' if len(post['text']) > 700 else ''}\n\n"
                 f"👉 {post['url']}"
             )
             if send_telegram_message(token, chat_id, msg):
                 total_sent += 1
+                sent_fps.append(fp)
             time.sleep(1.5)  # не упираемся в лимиты Bot API
 
         # Храним только последние N ID, чтобы state.json не разрастался
@@ -309,6 +407,7 @@ def main():
         time.sleep(1)  # пауза между каналами, чтобы не злить t.me
 
     state["first_run_done"] = True
+    state["sent_fingerprints"] = sent_fps[-800:]
 
     # ------------------------------------------------------------ hh.ru ----
     hh_first_run = not state.get("hh_first_run_done", False)
