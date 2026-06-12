@@ -149,18 +149,23 @@ def fingerprint(text: str) -> str:
 
 
 def ai_verdict(profile: str, post_text: str):
-    """Спрашивает у Claude Haiku, релевантна ли вакансия профилю.
-    Возвращает (True/False, причина) или None при ошибке/отсутствии ключа."""
+    """Просит Claude Haiku оценить вакансию по шкале 0–100 для профиля.
+    Возвращает (score, причина) или None при ошибке/отсутствии ключа."""
     api_key = os.environ.get("ANTHROPIC_API_KEY", "").strip()
     if not api_key:
         return None
     prompt = (
         f"{profile}\n\n"
-        "Ниже пост из телеграм-канала с вакансиями. Реши, релевантна ли "
-        "вакансия этому кандидату. Если пост вообще не вакансия (реклама, "
-        "статья, дайджест без конкретной позиции) — это НЕ релевантно.\n"
+        "Ниже пост из телеграм-канала с вакансиями. Оцени релевантность "
+        "вакансии этому кандидату по шкале 0–100:\n"
+        "90–100 — прямое попадание в целевую роль и уровень;\n"
+        "70–89 — целевая роль, но есть несовпадение по домену/гео/требованиям;\n"
+        "40–69 — смежная роль или уровень ниже целевого;\n"
+        "0–39 — не вакансия, другая профессия, линейная позиция или мидл.\n"
+        "Если пост вообще не вакансия (реклама, статья, дайджест без "
+        "конкретной позиции) — ставь 0.\n"
         "Ответь строго одной строкой JSON без пояснений: "
-        '{"relevant": true|false, "reason": "очень кратко, до 10 слов"}\n\n'
+        '{"score": <число 0-100>, "reason": "очень кратко, до 12 слов"}\n\n'
         f"ПОСТ:\n{post_text[:2000]}"
     )
     try:
@@ -173,7 +178,7 @@ def ai_verdict(profile: str, post_text: str):
             },
             json={
                 "model": ANTHROPIC_MODEL,
-                "max_tokens": 100,
+                "max_tokens": 120,
                 "messages": [{"role": "user", "content": prompt}],
             },
             timeout=45,
@@ -182,7 +187,8 @@ def ai_verdict(profile: str, post_text: str):
         raw = r.json()["content"][0]["text"].strip()
         raw = raw.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
         data = json.loads(raw)
-        return bool(data.get("relevant")), str(data.get("reason", ""))[:120]
+        score = max(0, min(100, int(data.get("score", 0))))
+        return score, str(data.get("reason", ""))[:120]
     except Exception as e:
         print(f"[warn] AI-фильтр недоступен ({e}), переключаюсь на ключевые слова")
         return None
@@ -207,8 +213,13 @@ def is_relevant(post_text: str, config) -> tuple:
             return False, "не прошёл префильтр"
         verdict = ai_verdict(ai_cfg.get("profile", ""), post_text)
         if verdict is not None:
-            ok, reason = verdict
-            return ok, f"AI: {reason}" if reason else "AI"
+            score, reason = verdict
+            min_score = int(ai_cfg.get("min_score", 65))
+            why = f"🎯 {score}/100" + (f" — {reason}" if reason else "")
+            if score >= min_score:
+                return True, why
+            print(f"[skip] ниже порога: {why}")
+            return False, why
         # AI недоступен — откат на ключевые слова
 
     matched = [kw for kw in keywords if _keyword_hit(kw, low)]
