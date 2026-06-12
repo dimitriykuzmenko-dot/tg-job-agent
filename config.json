@@ -1,0 +1,46 @@
+{
+  "channels": [
+    "i_top_groups",
+    "geekjobs",
+    "forchiefs",
+    "career_ru",
+    "c_level_top",
+    "vacancyCRC",
+    "HRSOYUZ",
+    "jobinspb",
+    "work_for_top",
+    "workfortop",
+    "toplevel_job",
+    "alenavladimirskaya",
+    "finexecutive",
+    "vdhl_good",
+    "goodpeople_pro"
+  ],
+  "keywords": [
+    "coo",
+    "ceo",
+    "cmo",
+    "операционный директор",
+    "операционного директора",
+    "исполнительный директор",
+    "исполнительного директора",
+    "генеральный директор",
+    "генерального директора",
+    "директор по маркетингу",
+    "директора по маркетингу",
+    "коммерческий директор",
+    "коммерческого директора",
+    "управляющий директор",
+    "директор по операц",
+    "head of operations",
+    "managing director"
+  ],
+  "exclude_keywords": [
+    "стажировка",
+    "стажер",
+    "стажёр",
+    "ассистент",
+    "помощник руководителя"
+  ],
+  "max_post_age_hours": 48
+}
