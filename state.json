@@ -1,7 +1,6 @@
 {
  "seen": {
   "i_top_groups": [
-   13617,
    13618,
    13619,
    13620,
@@ -300,7 +299,8 @@
    13917,
    13918,
    13919,
-   13920
+   13920,
+   13921
   ],
   "geekjobs": [
    10117,
@@ -934,7 +934,6 @@
    3876
   ],
   "vacancyCRC": [
-   16685,
    16686,
    16687,
    16688,
@@ -1233,7 +1232,8 @@
    16993,
    16994,
    16995,
-   16996
+   16996,
+   16997
   ],
   "HRSOYUZ": [
    11315,
@@ -4563,7 +4563,6 @@
  },
  "first_run_done": true,
  "sent_fingerprints": [
-  "aba67f6d145caf2ea213b480c5e80047",
   "74caa42df6ad724d13108e256b8c53f4",
   "98c2faaa34e4032bdfb57dc3fa0e11b6",
   "b77bc88bae708b53039f229ba5dcf128",
@@ -5362,7 +5361,8 @@
   "f97a27d48740ff56cd25fd7fd73ad5db",
   "8ac6fac2471434fe1bdd6e496c8b0350",
   "2f5d78c2b870762bdb5f7f5016bda6c0",
-  "c59278c52dae11b03b4ebc9646814efe"
+  "c59278c52dae11b03b4ebc9646814efe",
+  "85646de7bee450749ced3dc028cd552f"
  ],
  "seen_hh": [],
  "hh_first_run_done": true
