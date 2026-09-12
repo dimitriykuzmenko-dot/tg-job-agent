@@ -965,7 +965,6 @@
    3910
   ],
   "vacancyCRC": [
-   16779,
    16780,
    16781,
    16782,
@@ -1264,7 +1263,8 @@
    17089,
    17090,
    17091,
-   17092
+   17092,
+   17093
   ],
   "HRSOYUZ": [
    11369,
@@ -4666,7 +4666,6 @@
  },
  "first_run_done": true,
  "sent_fingerprints": [
-  "26c1cd125f2f2ea78b7774a328c1f05d",
   "3a6e56e568a102b52369311b8fceb5e8",
   "9c209ec331343c93216086ffe2c6e9ef",
   "ea8aa46d2972b1af980a587f2d0bacbe",
@@ -5465,7 +5464,8 @@
   "c89f780577ae47ab3a8ded4b0260ba69",
   "92a39258097e6e7e2d818a3d331d1cc2",
   "0b313d7da022509ac381c21961556aaa",
-  "b0aa6a14260425283d522c5209f8d192"
+  "b0aa6a14260425283d522c5209f8d192",
+  "834ec5d2e1088cfbf9f7f52b52931ca5"
  ],
  "seen_hh": [],
  "hh_first_run_done": true
