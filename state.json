@@ -666,7 +666,9 @@
    3886,
    3887,
    3888,
-   3889
+   3889,
+   3890,
+   3891
   ],
   "career_ru": [],
   "c_level_top": [
@@ -3773,9 +3775,6 @@
    1819
   ],
   "TOP_job_in_production": [
-   5250,
-   5251,
-   5252,
    5253,
    5254,
    5255,
@@ -4072,7 +4071,10 @@
    5551,
    5552,
    5553,
-   5554
+   5554,
+   5555,
+   5556,
+   5557
   ],
   "careerfedoroff": [
    6859,
@@ -4694,8 +4696,6 @@
  },
  "first_run_done": true,
  "sent_fingerprints": [
-  "68f3b21f65bd28b73eaaaa90145953b6",
-  "418de4af0adfbd6210f1a2e46319e0cb",
   "832b21628e5a5d3b558fce5e98aeaef3",
   "9be4e1b7f561a4805f23efbc11c04ea4",
   "e7ef2a40fe3e33e2c5c0698c6c90af6d",
@@ -5493,7 +5493,9 @@
   "f2244bf96ae2c576ce589f5d4c35d5e3",
   "8ec94076bbdecb004041a3d469a227f7",
   "7c2b47a212314876b1d1ba6c6008aa22",
-  "d77e04e363ef362cd09d2ee2ec212bc7"
+  "d77e04e363ef362cd09d2ee2ec212bc7",
+  "ab8b24b9e8be46e549d16cc6a44ed20a",
+  "775db735b06b9bbcd0642a78330e4af2"
  ],
  "seen_hh": [],
  "hh_first_run_done": true
