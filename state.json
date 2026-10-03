@@ -1051,7 +1051,6 @@
    4038
   ],
   "vacancyCRC": [
-   17077,
    17078,
    17079,
    17080,
@@ -1350,7 +1349,8 @@
    17379,
    17380,
    17381,
-   17382
+   17382,
+   17383
   ],
   "HRSOYUZ": [
    11516,
@@ -4494,7 +4494,6 @@
    1257
   ],
   "zarubezhom_jobs": [
-   3950,
    3951,
    3952,
    3953,
@@ -4793,7 +4792,8 @@
    4278,
    4279,
    4280,
-   4281
+   4281,
+   4283
   ],
   "job_for_relocation": [
    1692,
@@ -4923,7 +4923,6 @@
  },
  "first_run_done": true,
  "sent_fingerprints": [
-  "905f05cee1fffdae9f4cac794bcec26e",
   "88cae616740f1d54cfd87496de4cf6ab",
   "21c27e4b50c171e243516cc926dc4ded",
   "a8a73080dfb0b232cb660c3009a91823",
@@ -5722,7 +5721,8 @@
   "74fc2f7077c884ffa850799573f1a72f",
   "a883f52bb31048b8405e23cf45dad922",
   "610a6ef06e87ee4aa6c52de52ef5990c",
-  "eedd9f8c62aaa908adb38cc21383c366"
+  "eedd9f8c62aaa908adb38cc21383c366",
+  "f30b6d59f72e5b2a74627ac4ab425c00"
  ],
  "seen_hh": [],
  "hh_first_run_done": true
