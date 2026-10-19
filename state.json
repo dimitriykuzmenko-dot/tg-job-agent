@@ -1,7 +1,6 @@
 {
  "seen": {
   "i_top_groups": [
-   14070,
    14071,
    14072,
    14073,
@@ -300,7 +299,8 @@
    14374,
    14375,
    14376,
-   14377
+   14377,
+   14378
   ],
   "geekjobs": [
    10156,
@@ -5068,7 +5068,6 @@
  },
  "first_run_done": true,
  "sent_fingerprints": [
-  "db0c50149ddf196d7753dfc5c37d4cd5",
   "8ad7e4f368aa0b308d9d6d5060bd62d8",
   "460e6cf9109c5fb88a9ddd79b0b1bfd1",
   "d7d8b6d8bad37128118175652a299b94",
@@ -5867,7 +5866,8 @@
   "e1d7788f35d635ee2a06f2994f3f0c92",
   "34aa10ba9794ba8475000af80bce08b5",
   "4451d7e36d4b7ba5796f17f388959c46",
-  "7f15faa077e9a5779fab2d8855711197"
+  "7f15faa077e9a5779fab2d8855711197",
+  "ea407dcddeb94f8db1c2ff8425c6f841"
  ],
  "seen_hh": [],
  "hh_first_run_done": true
